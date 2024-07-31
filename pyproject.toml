@@ -1,0 +1,32 @@
+[project]
+name = "pysleep"
+dynamic = ["version"]
+readme = "README.md"
+authors = [
+    {name = "Hankyeol Kyung", email = "kghnkl0103@gmail.com"},
+]
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm.version]
+source = "file"
+path = "src/pysleep/__init__.py"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
