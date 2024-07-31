@@ -10,6 +10,10 @@ authors = [
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
+[tool.pdm.version]
+source = "file"
+path = "src/pysleep/__init__.py"
+
 [tool.ruff]
 line-length = 120
 
