@@ -5,10 +5,14 @@ readme = "README.md"
 authors = [
     {name = "Hankyeol Kyung", email = "kghnkl0103@gmail.com"},
 ]
+requires-python = ">=3.10"
 
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
+
+[project.optional-dependencies]
+dev = ["pytest", "parameterized"]
 
 [tool.pdm.version]
 source = "file"
@@ -30,3 +34,4 @@ select = [
     # isort
     "I",
 ]
+

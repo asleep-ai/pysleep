@@ -10,5 +10,6 @@ Provides
 __version__ = "0.0.1"
 
 from .label import APNEA, DEEP, HYPOPNEA, LIGHT, NO_EVENT, REM, SNORE, WAKE
+from .stat import SleepStat, SleepStatDelta
 
-__all__ = ["APNEA", "DEEP", "HYPOPNEA", "LIGHT", "NO_EVENT", "REM", "SNORE", "WAKE"]
+__all__ = ["APNEA", "DEEP", "HYPOPNEA", "LIGHT", "NO_EVENT", "REM", "SNORE", "WAKE", "SleepStat", "SleepStatDelta"]
