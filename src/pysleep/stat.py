@@ -101,6 +101,7 @@ class SleepStat:
             unstable_breath_count=self.unstable_breath_count - other.unstable_breath_count
             if self.unstable_breath_count and other.unstable_breath_count
             else None,
+            snoring_count=self.snoring_count - other.snoring_count if self.snoring_count and other.snoring_count else None 
         )
 
 
@@ -142,6 +143,7 @@ class SleepStatDelta:
         sleep_cycle_count: int | None = None,
         sleep_cycle: timedelta | None = None,
         unstable_breath_count: int | None = None,
+        snoring_count: int | None = None,
     ):
         self.sleep_time = sleep_time
         self.wake_time = wake_time
@@ -178,6 +180,7 @@ class SleepStatDelta:
         self.sleep_cycle_count = sleep_cycle_count
         self.sleep_cycle = sleep_cycle
         self.unstable_breath_count = unstable_breath_count
+        self.snoring_count = snoring_count
 
 
 def subtract_relative_time(dt1: datetime, dt2: datetime) -> timedelta:
