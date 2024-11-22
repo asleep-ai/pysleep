@@ -35,7 +35,7 @@ class SleepStat:
     longest_waso: timedelta | None = None
     sleep_cycle_count: int | None = None
     sleep_cycle: timedelta | None = None
-    unstable_breath_count: int 
+    unstable_breath_count: int
     snoring_count: int
     sleep_index: int | None = None
     sleep_cycle_time: list[datetime]
@@ -71,23 +71,23 @@ class SleepStat:
             sleep_efficiency=self.sleep_efficiency - other.sleep_efficiency,
             sleep_ratio=(self.sleep_ratio, other.sleep_ratio),
             wake_ratio=self.wake_ratio - other.wake_ratio,
-            light_ratio=self.light_ratio- other.light_ratio,
-            deep_ratio=self.deep_ratio- other.deep_ratio,
-            rem_ratio=self.rem_ratio- other.rem_ratio,
-            stable_breath_ratio=self.stable_breath_ratio-  other.stable_breath_ratio,
-            unstable_breath_ratio=self.unstable_breath_ratio- other.unstable_breath_ratio,
-            snoring_ratio=self.snoring_ratio- other.snoring_ratio,
+            light_ratio=self.light_ratio - other.light_ratio,
+            deep_ratio=self.deep_ratio - other.deep_ratio,
+            rem_ratio=self.rem_ratio - other.rem_ratio,
+            stable_breath_ratio=self.stable_breath_ratio - other.stable_breath_ratio,
+            unstable_breath_ratio=self.unstable_breath_ratio - other.unstable_breath_ratio,
+            snoring_ratio=self.snoring_ratio - other.snoring_ratio,
             breathing_index=self.breathing_index - other.breathing_index,
-            unstable_breath_count=self.unstable_breath_count- other.unstable_breath_count,
+            unstable_breath_count=self.unstable_breath_count - other.unstable_breath_count,
             snoring_count=self.snoring_count - other.snoring_count,
-            light_latency=subtract_if_not_none(self.light_latency , other.light_latency),
-            deep_latency=subtract_if_not_none(self.deep_latency , other.deep_latency),
-            rem_latency=subtract_if_not_none(self.rem_latency , other.rem_latency),
+            light_latency=subtract_if_not_none(self.light_latency, other.light_latency),
+            deep_latency=subtract_if_not_none(self.deep_latency, other.deep_latency),
+            rem_latency=subtract_if_not_none(self.rem_latency, other.rem_latency),
             waso_count=subtract_if_not_none(self.waso_count, other.waso_count),
             longest_waso=subtract_if_not_none(self.longest_waso, other.longest_waso),
             sleep_cycle_count=subtract_if_not_none(self.sleep_cycle_count, other.sleep_cycle_count),
             sleep_cycle=subtract_if_not_none(self.sleep_cycle, other.sleep_cycle),
-            sleep_index=subtract_if_not_none(self.sleep_index , other.sleep_index)
+            sleep_index=subtract_if_not_none(self.sleep_index, other.sleep_index),
         )
 
 
