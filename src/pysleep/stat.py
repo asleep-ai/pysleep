@@ -69,7 +69,7 @@ class SleepStat:
             time_in_unstable_breath=self.time_in_unstable_breath - other.time_in_unstable_breath,
             time_in_snoring=self.time_in_snoring - other.time_in_snoring,
             sleep_efficiency=self.sleep_efficiency - other.sleep_efficiency,
-            sleep_ratio=(self.sleep_ratio, other.sleep_ratio),
+            sleep_ratio=self.sleep_ratio - other.sleep_ratio,
             wake_ratio=self.wake_ratio - other.wake_ratio,
             light_ratio=self.light_ratio - other.light_ratio,
             deep_ratio=self.deep_ratio - other.deep_ratio,
