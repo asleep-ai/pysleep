@@ -31,8 +31,8 @@ class SleepStat:
     snoring_ratio: float
     breathing_pattern: str
     breathing_index: float
-    waso_count: int | None = None
-    longest_waso: timedelta | None = None
+    waso_count: int
+    longest_waso: timedelta
     sleep_cycle_count: int | None = None
     sleep_cycle: timedelta | None = None
     unstable_breath_count: int
