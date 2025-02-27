@@ -3,6 +3,8 @@ from zoneinfo import ZoneInfo
 
 
 class SleepStat:
+    start_time: datetime
+    end_time: datetime
     sleep_time: datetime
     wake_time: datetime
     sleep_latency: timedelta
@@ -20,6 +22,7 @@ class SleepStat:
     time_in_stable_breath: timedelta
     time_in_unstable_breath: timedelta
     time_in_snoring: timedelta
+    time_in_no_snoring: timedelta
     sleep_efficiency: float
     sleep_ratio: float
     wake_ratio: float
@@ -29,6 +32,7 @@ class SleepStat:
     stable_breath_ratio: float
     unstable_breath_ratio: float
     snoring_ratio: float
+    no_snoring_ratio: float
     breathing_pattern: str
     breathing_index: float
     waso_count: int
@@ -42,6 +46,8 @@ class SleepStat:
 
     def update_to_timezone(self, tz_str: str):
         tz = ZoneInfo(tz_str)
+        self.start_time = self.start_time.astimezone(tz)
+        self.end_time = self.end_time.astimezone(tz)
         self.sleep_time = self.sleep_time.astimezone(tz)
         self.wake_time = self.wake_time.astimezone(tz)
         self.sleep_cycle_time = [t.astimezone(tz) for t in self.sleep_cycle_time]
@@ -54,6 +60,8 @@ class SleepStat:
             other (SleepStat): The other SleepStat instance to subtract from this instance.
         """
         return SleepStatDelta(
+            start_time=subtract_relative_time(self.start_time, other.start_time),
+            end_time=subtract_relative_time(self.end_time, other.end_time),
             sleep_time=subtract_relative_time(self.sleep_time, other.sleep_time),
             wake_time=subtract_relative_time(self.wake_time, other.wake_time),
             sleep_latency=self.sleep_latency - other.sleep_latency,
@@ -68,6 +76,7 @@ class SleepStat:
             time_in_stable_breath=self.time_in_stable_breath - other.time_in_stable_breath,
             time_in_unstable_breath=self.time_in_unstable_breath - other.time_in_unstable_breath,
             time_in_snoring=self.time_in_snoring - other.time_in_snoring,
+            time_in_no_snoring=self.time_in_no_snoring - other.time_in_no_snoring,
             sleep_efficiency=self.sleep_efficiency - other.sleep_efficiency,
             sleep_ratio=self.sleep_ratio - other.sleep_ratio,
             wake_ratio=self.wake_ratio - other.wake_ratio,
@@ -77,14 +86,15 @@ class SleepStat:
             stable_breath_ratio=self.stable_breath_ratio - other.stable_breath_ratio,
             unstable_breath_ratio=self.unstable_breath_ratio - other.unstable_breath_ratio,
             snoring_ratio=self.snoring_ratio - other.snoring_ratio,
+            no_snoring_ratio=self.no_snoring_ratio - other.no_snoring_ratio,
             breathing_index=self.breathing_index - other.breathing_index,
             unstable_breath_count=self.unstable_breath_count - other.unstable_breath_count,
             snoring_count=self.snoring_count - other.snoring_count,
             light_latency=subtract_if_not_none(self.light_latency, other.light_latency),
             deep_latency=subtract_if_not_none(self.deep_latency, other.deep_latency),
             rem_latency=subtract_if_not_none(self.rem_latency, other.rem_latency),
-            waso_count=subtract_if_not_none(self.waso_count, other.waso_count),
-            longest_waso=subtract_if_not_none(self.longest_waso, other.longest_waso),
+            waso_count=self.waso_count - other.waso_count,
+            longest_waso=self.longest_waso - other.longest_waso,
             sleep_cycle_count=subtract_if_not_none(self.sleep_cycle_count, other.sleep_cycle_count),
             sleep_cycle=subtract_if_not_none(self.sleep_cycle, other.sleep_cycle),
             sleep_index=subtract_if_not_none(self.sleep_index, other.sleep_index),
@@ -99,6 +109,8 @@ class SleepStatDelta:
 
     def __init__(
         self,
+        start_time: timedelta,
+        end_time: timedelta,
         sleep_time: timedelta,
         wake_time: timedelta,
         sleep_latency: timedelta,
@@ -113,6 +125,7 @@ class SleepStatDelta:
         time_in_stable_breath: timedelta,
         time_in_unstable_breath: timedelta,
         time_in_snoring: timedelta,
+        time_in_no_snoring: timedelta,
         sleep_efficiency: float,
         sleep_ratio: float,
         wake_ratio: float,
@@ -122,18 +135,21 @@ class SleepStatDelta:
         stable_breath_ratio: float,
         unstable_breath_ratio: float,
         snoring_ratio: float,
+        no_snoring_ratio: float,
         breathing_index: float,
         unstable_breath_count: int,
         snoring_count: int,
+        waso_count: int,
+        longest_waso: timedelta,
         light_latency: timedelta | None = None,
         deep_latency: timedelta | None = None,
         rem_latency: timedelta | None = None,
-        waso_count: int | None = None,
-        longest_waso: timedelta | None = None,
         sleep_cycle_count: int | None = None,
         sleep_cycle: timedelta | None = None,
         sleep_index: int | None = None,
     ):
+        self.start_time = start_time
+        self.end_time = end_time
         self.sleep_time = sleep_time
         self.wake_time = wake_time
         self.sleep_index = sleep_index
@@ -152,6 +168,7 @@ class SleepStatDelta:
         self.time_in_stable_breath = time_in_stable_breath
         self.time_in_unstable_breath = time_in_unstable_breath
         self.time_in_snoring = time_in_snoring
+        self.time_in_no_snoring = time_in_no_snoring
         self.sleep_efficiency = sleep_efficiency
         self.sleep_ratio = sleep_ratio
         self.wake_ratio = wake_ratio
@@ -161,6 +178,7 @@ class SleepStatDelta:
         self.stable_breath_ratio = stable_breath_ratio
         self.unstable_breath_ratio = unstable_breath_ratio
         self.snoring_ratio = snoring_ratio
+        self.no_snoring_ratio = no_snoring_ratio
         self.breathing_index = breathing_index
         self.waso_count = waso_count
         self.longest_waso = longest_waso
