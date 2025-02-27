@@ -21,10 +21,10 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
-urls = {
-    "Homepage" = "https://github.com/asleep-ai/pysleep",
-    "Bug Tracker" = "https://github.com/asleep-ai/pysleep/issues",
-}
+
+[project.urls]
+Homepage = "https://github.com/asleep-ai/pysleep"
+"Bug Tracker" = "https://github.com/asleep-ai/pysleep/issues"
 
 [build-system]
 requires = ["pdm-backend"]
