@@ -6,6 +6,25 @@ authors = [
     {name = "Hankyeol Kyung", email = "kghnkl0103@gmail.com"},
 ]
 requires-python = ">=3.10"
+description = "A Python library for sleep pattern analysis and sleep metrics calculation"
+keywords = ["sleep", "analysis", "metrics", "medical", "research", "health"]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+urls = {
+    "Homepage" = "https://github.com/asleep-ai/pysleep",
+    "Bug Tracker" = "https://github.com/asleep-ai/pysleep/issues",
+}
 
 [build-system]
 requires = ["pdm-backend"]
