@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        enable-cache: true
+    
+    - name: Get current version and bump
+      id: bump
+      run: |
+        # Extract current version from __init__.py
+        CURRENT_VERSION=$(grep -oP '__version__\s*=\s*"\K[^"]+' src/pysleep/__init__.py || grep -oE '__version__[[:space:]]*=[[:space:]]*"[^"]+"' src/pysleep/__init__.py | cut -d'"' -f2)
+        echo "Current version: $CURRENT_VERSION"
+        
+        # Parse version components
+        IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+        
+        # Bump version based on input
+        case "${{ github.event.inputs.version_bump }}" in
+          major)
+            major=$((major + 1))
+            minor=0
+            patch=0
+            ;;
+          minor)
+            minor=$((minor + 1))
+            patch=0
+            ;;
+          patch)
+            patch=$((patch + 1))
+            ;;
+        esac
+        
+        NEW_VERSION="${major}.${minor}.${patch}"
+        echo "New version: $NEW_VERSION"
+        
+        # Set outputs
+        echo "old_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+        echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Configure Git
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Create release branch and update version
+      run: |
+        BRANCH_NAME="release/${{ steps.bump.outputs.new_version }}"
+        git checkout -b $BRANCH_NAME
+        
+        sed -i "s/__version__ = \".*\"/__version__ = \"${{ steps.bump.outputs.new_version }}\"/" src/pysleep/__init__.py
+        git add src/pysleep/__init__.py
+        git commit -m "Bump version to ${{ steps.bump.outputs.new_version }}"
+        git push origin $BRANCH_NAME
+    
+    - name: Merge release branch to main
+      run: |
+        git checkout main
+        git pull origin main
+        git merge --no-ff "release/${{ steps.bump.outputs.new_version }}" -m "Merge release/${{ steps.bump.outputs.new_version }} to main"
+        git push origin main
+    
+    - name: Create Git tag on main
+      run: |
+        git tag -a "v${{ steps.bump.outputs.new_version }}" -m "Release v${{ steps.bump.outputs.new_version }}"
+        git push origin "v${{ steps.bump.outputs.new_version }}"
+    
+    - name: Build package
+      run: uv build
+    
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}
