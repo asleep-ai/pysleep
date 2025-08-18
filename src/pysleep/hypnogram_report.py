@@ -112,25 +112,17 @@ def format_duration(seconds: int) -> str:
     return " ".join(parts)
 
 
-def parse_time(time_str: str) -> datetime | None:
-    """Parse a time string to datetime object."""
-    if not time_str:
-        return None
-    try:
-        return datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
-    except (ValueError, TypeError):
-        return None
 
 
-def format_time_range(start_dt: datetime, end_dt: datetime) -> str:
+def format_time_range(start_time: datetime, end_time: datetime) -> str:
     """Format a time range for display."""
-    return f"{start_dt.strftime('%I:%M %p')} - {end_dt.strftime('%I:%M %p')}"
+    return f"{start_time.strftime('%I:%M %p')} - {end_time.strftime('%I:%M %p')}"
 
 
-def calculate_end_time(start_dt: datetime, num_epochs: int) -> datetime:
+def calculate_end_time(start_time: datetime, num_epochs: int) -> datetime:
     """Calculate end time based on start time and number of epochs."""
     duration_seconds = num_epochs * EPOCH_DURATION
-    return start_dt + timedelta(seconds=duration_seconds)
+    return start_time + timedelta(seconds=duration_seconds)
 
 
 def create_stage_summary(summary: dict[str, dict[str, Any]]) -> dict[str, list[Any]]:
@@ -138,9 +130,9 @@ def create_stage_summary(summary: dict[str, dict[str, Any]]) -> dict[str, list[A
     return {stage: [data["duration"], data["percentage"]] for stage, data in summary.items()}
 
 
-def group_events_by_hour(events: list[dict[str, Any]], start_dt: datetime | None) -> list[dict[str, Any]]:
+def group_events_by_hour(events: list[dict[str, Any]], start_time: datetime | None) -> list[dict[str, Any]]:
     """Group sleep stage events by hour."""
-    if not start_dt:
+    if not start_time:
         # No time info - return all events in one group
         return [
             {
@@ -150,7 +142,7 @@ def group_events_by_hour(events: list[dict[str, Any]], start_dt: datetime | None
         ]
 
     grouped_hours = []
-    current_hour = start_dt.replace(minute=0, second=0, microsecond=0)
+    current_hour = start_time.replace(minute=0, second=0, microsecond=0)
     next_hour = current_hour + timedelta(hours=1)
 
     hour_data = {"hour_range": format_time_range(current_hour, next_hour), "stages": []}
@@ -158,7 +150,7 @@ def group_events_by_hour(events: list[dict[str, Any]], start_dt: datetime | None
     for i, event in enumerate(events, 1):
         # Calculate actual time for this event
         event_start_seconds = event["start_epoch"] * EPOCH_DURATION
-        event_start_time = start_dt + timedelta(seconds=event_start_seconds)
+        event_start_time = start_time + timedelta(seconds=event_start_seconds)
 
         # Check if we've moved to the next hour
         while event_start_time >= next_hour:
@@ -307,8 +299,8 @@ def format_json_compact(report: dict[str, Any]) -> str:
 
 def generate_hypnogram_report(
     hypnogram_data: list[int],
-    start_time: str = "",
-    end_time: str = "",
+    start_time: datetime | None = None,
+    end_time: datetime | None = None,
     compact: bool = True,
 ) -> str | dict[str, Any]:
     """
@@ -322,16 +314,19 @@ def generate_hypnogram_report(
 
     Args:
         hypnogram_data: List of integers (0-3) representing sleep stages
-        start_time: Optional start time in "YYYY-MM-DD HH:MM:SS" format
-        end_time: Optional end time in "YYYY-MM-DD HH:MM:SS" format
+        start_time: Optional start time as datetime object
+        end_time: Optional end time as datetime object
         compact: If True, return formatted compact JSON string. If False, return dict
 
     Returns:
         Formatted JSON string if compact=True, otherwise dictionary
 
     Example:
+        >>> from datetime import datetime
         >>> data = [0]*120 + [1]*60 + [2]*80 + [3]*40
-        >>> report = generate_hypnogram_report(data, "2024-01-15 23:00:00", "2024-01-16 01:30:00")
+        >>> start = datetime(2024, 1, 15, 23, 0, 0)
+        >>> end = datetime(2024, 1, 16, 1, 30, 0)
+        >>> report = generate_hypnogram_report(data, start, end)
         >>> print(report)  # Prints compact JSON
     """
     # Extract events and calculate summary
@@ -341,16 +336,12 @@ def generate_hypnogram_report(
     # Generate basic report structure
     report = generate_basic_stage_report(hypnogram_data, events, summary)
 
-    # Parse times if provided
-    start_dt = parse_time(start_time)
-    end_dt = parse_time(end_time)
-
     # Calculate end time if needed
-    if start_dt and end_dt == start_dt and hypnogram_data:
-        end_dt = calculate_end_time(start_dt, len(hypnogram_data))
+    if start_time and end_time == start_time and hypnogram_data:
+        end_time = calculate_end_time(start_time, len(hypnogram_data))
 
     # Add time-based enhancements
-    report = add_time_grouping(report, events, start_dt, end_dt)
+    report = add_time_grouping(report, events, start_time, end_time)
 
     # Return formatted or raw based on preference
     return format_json_compact(report) if compact else report
