@@ -41,7 +41,7 @@ class SleepStageCalculator:
         >>> start = datetime(2024, 1, 1, 22, 0, 0)
         >>> end = datetime(2024, 1, 2, 6, 0, 0)
         >>> stages = [0, 0, 1, 1, 2, 2, 3, 1, 1, 0, ...]
-        >>> result = calculator.calculate(start, end, stages)
+        >>> result = calculator.calculate(stages, start, end)
         >>> print(f"Sleep index: {result.sleep_index}")
     """
 
@@ -266,24 +266,33 @@ class SleepStageCalculator:
         Returns:
             SleepStageLatency with all latency values in seconds
         """
-        sleep_latency = moments.first_sleep_idx * SECONDS_PER_EPOCH
-        wakeup_latency = (moments.last_stage_idx - moments.last_sleep_idx) * SECONDS_PER_EPOCH
+        # Handle case when no sleep occurred (all wake)
+        if moments.first_sleep_idx == -1:
+            # Sleep latency is entire session duration
+            sleep_latency = (moments.last_stage_idx + 1) * SECONDS_PER_EPOCH
+            wakeup_latency = 0
+            light_latency = None
+            deep_latency = None
+            rem_latency = None
+        else:
+            sleep_latency = moments.first_sleep_idx * SECONDS_PER_EPOCH
+            wakeup_latency = (moments.last_stage_idx - moments.last_sleep_idx) * SECONDS_PER_EPOCH
 
-        light_latency = (
-            (moments.first_light_idx - moments.first_sleep_idx) * SECONDS_PER_EPOCH
-            if moments.first_light_idx != -1
-            else None
-        )
-        deep_latency = (
-            (moments.first_deep_idx - moments.first_sleep_idx) * SECONDS_PER_EPOCH
-            if moments.first_deep_idx != -1
-            else None
-        )
-        rem_latency = (
-            (moments.first_rem_idx - moments.first_sleep_idx) * SECONDS_PER_EPOCH
-            if moments.first_rem_idx != -1
-            else None
-        )
+            light_latency = (
+                (moments.first_light_idx - moments.first_sleep_idx) * SECONDS_PER_EPOCH
+                if moments.first_light_idx != -1
+                else None
+            )
+            deep_latency = (
+                (moments.first_deep_idx - moments.first_sleep_idx) * SECONDS_PER_EPOCH
+                if moments.first_deep_idx != -1
+                else None
+            )
+            rem_latency = (
+                (moments.first_rem_idx - moments.first_sleep_idx) * SECONDS_PER_EPOCH
+                if moments.first_rem_idx != -1
+                else None
+            )
 
         return SleepStageLatency(
             sleep_latency=sleep_latency,
@@ -398,6 +407,10 @@ class SleepStageCalculator:
         start = moments.first_sleep_idx
         end = moments.last_sleep_idx
 
+        # Handle case when no sleep occurred
+        if start == -1:
+            return 0, 0
+
         wake_cls_start = -1
         wake_cls_count = 0
         longest_wake_count = 0
@@ -440,6 +453,10 @@ class SleepStageCalculator:
         start = moments.first_sleep_idx
         end = moments.last_sleep_idx
 
+        # Handle case when no sleep occurred
+        if start == -1:
+            return [], []
+
         rem_cls_start = -1
         rem_cls_end = -1
         rem_cls_starts = []
@@ -451,31 +468,30 @@ class SleepStageCalculator:
         for idx in range(start, end + 1):
             stage = sleep_stages[idx]
 
-            # Check if we should start a new cluster
-            if stage == REM and distance > THRESHOLD_REM_CLUSTER_DISTANCE:
-                # Save previous cluster if valid
-                if rem_count >= THRESHOLD_REM_COUNT:
-                    rem_cls_starts.append(rem_cls_start)
-                    rem_cls_ends.append(rem_cls_end)
+            if stage == REM:
+                # Check if we should start a new cluster
+                if distance > THRESHOLD_REM_CLUSTER_DISTANCE:
+                    # Save previous cluster if valid
+                    if rem_count >= THRESHOLD_REM_COUNT:
+                        rem_cls_starts.append(rem_cls_start)
+                        rem_cls_ends.append(rem_cls_end)
 
-                # Start new cluster
-                rem_cls_start = idx
-                rem_cls_end = idx
-                rem_count = 1
+                    # Start new cluster
+                    rem_cls_start = idx
+                    rem_cls_end = idx
+                    rem_count = 1
+                else:
+                    # Continue or start current cluster
+                    if rem_cls_start == -1:
+                        rem_cls_start = idx
+                    rem_cls_end = idx
+                    rem_count += 1
+
+                # Reset distance
                 distance = 0
-            elif stage == REM and distance <= THRESHOLD_REM_CLUSTER_DISTANCE:
-                # Continue current cluster
-                distance = 0
-            elif stage != REM:
+            else:
                 # Non-REM: increment distance
                 distance += 1
-
-            # Update cluster if in REM
-            if stage == REM:
-                if rem_cls_start == -1:
-                    rem_cls_start = idx
-                rem_cls_end = idx
-                rem_count += 1
 
         # Save last cluster if valid
         if rem_count >= THRESHOLD_REM_COUNT:
@@ -551,7 +567,7 @@ class SleepStageCalculator:
         average_rem_cluster_distance = self._calculate_average_cluster_distance(moments, rem_cluster_ends)
 
         sleep_cycle = (
-            int(average_rem_cluster_distance * SECONDS_PER_EPOCH) if average_rem_cluster_distance is not None else None
+            average_rem_cluster_distance * SECONDS_PER_EPOCH if average_rem_cluster_distance is not None else None
         )
 
         return SleepStageClusterMetric(

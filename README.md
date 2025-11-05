@@ -36,7 +36,7 @@ end_time = datetime(2024, 1, 2, 6, 0, 0)
 sleep_stages = [0, 0, 1, 1, 2, 2, 3, 3, 1, 1, 0, 1, 2, 3]  # ... more epochs
 
 # Calculate metrics
-stats = calculator.calculate(start_time, end_time, sleep_stages)
+stats = calculator.calculate(sleep_stages, start_time, end_time)
 
 # Access results (returns SleepStat object)
 print(f"Sleep efficiency: {stats.sleep_efficiency:.1%}")

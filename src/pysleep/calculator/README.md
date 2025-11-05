@@ -29,7 +29,7 @@ end_time = datetime(2024, 1, 2, 6, 0, 0)
 sleep_stages = [0, 0, 1, 1, 2, 2, 3, 3, 1, 1, ...]
 
 # Calculate statistics
-result = calculator.calculate(start_time, end_time, sleep_stages)
+result = calculator.calculate(sleep_stages, start_time, end_time)
 
 # Access results (returns pysleep.SleepStat object)
 print(f"Sleep efficiency: {result.sleep_efficiency:.1%}")

@@ -307,6 +307,17 @@ class TestEdgeCases:
         assert result.time_in_sleep.total_seconds() == 0
         assert result.sleep_efficiency == 0.0
 
+        # Verify no negative latencies
+        assert result.sleep_latency.total_seconds() >= 0
+        assert result.wakeup_latency.total_seconds() >= 0
+        assert result.sleep_latency == result.time_in_bed
+        assert result.wakeup_latency.total_seconds() == 0
+
+        # Verify time ordering
+        assert result.sleep_time >= result.start_time
+        assert result.wake_time >= result.sleep_time
+        assert result.end_time >= result.wake_time
+
     def test_no_rem(self, calculator):
         """Test session with no REM sleep."""
         start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
@@ -331,6 +342,30 @@ class TestEdgeCases:
         assert result.time_in_bed.total_seconds() == 3600  # 1 hour
         assert result.time_in_sleep.total_seconds() == 3000  # 50 minutes
         assert result.sleep_index is None  # Calculator doesn't compute sleep index
+
+    def test_time_invariants(self, calculator):
+        """Test that time values always maintain proper ordering."""
+        # Test with various patterns
+        test_cases = [
+            ([WAKE] * 100, "all wake"),
+            ([LIGHT] * 100, "all sleep"),
+            ([WAKE] * 50 + [LIGHT] * 50, "wake then sleep"),
+            ([LIGHT] * 50 + [WAKE] * 50, "sleep then wake"),
+        ]
+
+        for stages, description in test_cases:
+            start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
+            end = start + timedelta(seconds=len(stages) * 30)
+            result = calculator.calculate(stages, start, end)
+
+            # Time ordering invariants
+            assert result.start_time <= result.sleep_time, f"Failed for {description}: start_time > sleep_time"
+            assert result.sleep_time <= result.wake_time, f"Failed for {description}: sleep_time > wake_time"
+            assert result.wake_time <= result.end_time, f"Failed for {description}: wake_time > end_time"
+
+            # Non-negative latencies
+            assert result.sleep_latency.total_seconds() >= 0, f"Failed for {description}: negative sleep_latency"
+            assert result.wakeup_latency.total_seconds() >= 0, f"Failed for {description}: negative wakeup_latency"
 
 
 def test_simple_hypnogram_without_datetime():

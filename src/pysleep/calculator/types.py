@@ -148,7 +148,7 @@ class SleepStageClusterMetric:
 
     waso_count: int
     longest_waso: int
-    sleep_cycle: Optional[int]
+    sleep_cycle: Optional[float]
     sleep_cycle_count: int
     sleep_cycle_time: List[datetime]
 
