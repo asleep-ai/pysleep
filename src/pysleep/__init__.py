@@ -7,6 +7,7 @@ Provides
   2. Metrics used in medical field
 """
 
+from .calculator import SleepStageCalculator
 from .hypnogram_report import generate_hypnogram_report
 from .label import APNEA, DEEP, HYPOPNEA, LIGHT, NO_EVENT, REM, SNORE, WAKE
 from .stat import SleepStat, SleepStatDelta
@@ -25,5 +26,6 @@ __all__ = [
     "WAKE",
     "SleepStat",
     "SleepStatDelta",
+    "SleepStageCalculator",
     "generate_hypnogram_report",
 ]
