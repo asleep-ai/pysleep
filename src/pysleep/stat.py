@@ -19,28 +19,28 @@ class SleepStat:
     time_in_light: timedelta
     time_in_deep: timedelta
     time_in_rem: timedelta
-    time_in_stable_breath: timedelta
-    time_in_unstable_breath: timedelta
-    time_in_snoring: timedelta
-    time_in_no_snoring: timedelta
+    time_in_stable_breath: timedelta | None = None
+    time_in_unstable_breath: timedelta | None = None
+    time_in_snoring: timedelta | None = None
+    time_in_no_snoring: timedelta | None = None
     sleep_efficiency: float
     sleep_ratio: float
     wake_ratio: float
     light_ratio: float
     deep_ratio: float
     rem_ratio: float
-    stable_breath_ratio: float
-    unstable_breath_ratio: float
-    snoring_ratio: float
-    no_snoring_ratio: float
-    breathing_pattern: str
-    breathing_index: float
+    stable_breath_ratio: float | None = None
+    unstable_breath_ratio: float | None = None
+    snoring_ratio: float | None = None
+    no_snoring_ratio: float | None = None
+    breathing_pattern: str | None = None
+    breathing_index: float | None = None
     waso_count: int
     longest_waso: timedelta
     sleep_cycle_count: int | None = None
     sleep_cycle: timedelta | None = None
-    unstable_breath_count: int
-    snoring_count: int
+    unstable_breath_count: int | None = None
+    snoring_count: int | None = None
     sleep_index: int | None = None
     sleep_cycle_time: list[datetime]
 
@@ -73,23 +73,23 @@ class SleepStat:
             time_in_light=self.time_in_light - other.time_in_light,
             time_in_deep=self.time_in_deep - other.time_in_deep,
             time_in_rem=self.time_in_rem - other.time_in_rem,
-            time_in_stable_breath=self.time_in_stable_breath - other.time_in_stable_breath,
-            time_in_unstable_breath=self.time_in_unstable_breath - other.time_in_unstable_breath,
-            time_in_snoring=self.time_in_snoring - other.time_in_snoring,
-            time_in_no_snoring=self.time_in_no_snoring - other.time_in_no_snoring,
+            time_in_stable_breath=subtract_if_not_none(self.time_in_stable_breath, other.time_in_stable_breath),
+            time_in_unstable_breath=subtract_if_not_none(self.time_in_unstable_breath, other.time_in_unstable_breath),
+            time_in_snoring=subtract_if_not_none(self.time_in_snoring, other.time_in_snoring),
+            time_in_no_snoring=subtract_if_not_none(self.time_in_no_snoring, other.time_in_no_snoring),
             sleep_efficiency=self.sleep_efficiency - other.sleep_efficiency,
             sleep_ratio=self.sleep_ratio - other.sleep_ratio,
             wake_ratio=self.wake_ratio - other.wake_ratio,
             light_ratio=self.light_ratio - other.light_ratio,
             deep_ratio=self.deep_ratio - other.deep_ratio,
             rem_ratio=self.rem_ratio - other.rem_ratio,
-            stable_breath_ratio=self.stable_breath_ratio - other.stable_breath_ratio,
-            unstable_breath_ratio=self.unstable_breath_ratio - other.unstable_breath_ratio,
-            snoring_ratio=self.snoring_ratio - other.snoring_ratio,
-            no_snoring_ratio=self.no_snoring_ratio - other.no_snoring_ratio,
-            breathing_index=self.breathing_index - other.breathing_index,
-            unstable_breath_count=self.unstable_breath_count - other.unstable_breath_count,
-            snoring_count=self.snoring_count - other.snoring_count,
+            stable_breath_ratio=subtract_if_not_none(self.stable_breath_ratio, other.stable_breath_ratio),
+            unstable_breath_ratio=subtract_if_not_none(self.unstable_breath_ratio, other.unstable_breath_ratio),
+            snoring_ratio=subtract_if_not_none(self.snoring_ratio, other.snoring_ratio),
+            no_snoring_ratio=subtract_if_not_none(self.no_snoring_ratio, other.no_snoring_ratio),
+            breathing_index=subtract_if_not_none(self.breathing_index, other.breathing_index),
+            unstable_breath_count=subtract_if_not_none(self.unstable_breath_count, other.unstable_breath_count),
+            snoring_count=subtract_if_not_none(self.snoring_count, other.snoring_count),
             light_latency=subtract_if_not_none(self.light_latency, other.light_latency),
             deep_latency=subtract_if_not_none(self.deep_latency, other.deep_latency),
             rem_latency=subtract_if_not_none(self.rem_latency, other.rem_latency),
@@ -122,23 +122,23 @@ class SleepStatDelta:
         time_in_light: timedelta,
         time_in_deep: timedelta,
         time_in_rem: timedelta,
-        time_in_stable_breath: timedelta,
-        time_in_unstable_breath: timedelta,
-        time_in_snoring: timedelta,
-        time_in_no_snoring: timedelta,
+        time_in_stable_breath: timedelta | None,
+        time_in_unstable_breath: timedelta | None,
+        time_in_snoring: timedelta | None,
+        time_in_no_snoring: timedelta | None,
         sleep_efficiency: float,
         sleep_ratio: float,
         wake_ratio: float,
         light_ratio: float,
         deep_ratio: float,
         rem_ratio: float,
-        stable_breath_ratio: float,
-        unstable_breath_ratio: float,
-        snoring_ratio: float,
-        no_snoring_ratio: float,
-        breathing_index: float,
-        unstable_breath_count: int,
-        snoring_count: int,
+        stable_breath_ratio: float | None,
+        unstable_breath_ratio: float | None,
+        snoring_ratio: float | None,
+        no_snoring_ratio: float | None,
+        breathing_index: float | None,
+        unstable_breath_count: int | None,
+        snoring_count: int | None,
         waso_count: int,
         longest_waso: timedelta,
         light_latency: timedelta | None = None,

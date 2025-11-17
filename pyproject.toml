@@ -6,8 +6,8 @@ authors = [
     {name = "Hankyeol Kyung", email = "kghnkl0103@gmail.com"},
 ]
 requires-python = ">=3.10"
-description = "A Python library for sleep pattern analysis and sleep metrics calculation"
-keywords = ["sleep", "analysis", "metrics", "medical", "research", "health"]
+description = "A Python library for sleep pattern analysis, sleep metrics calculation, and comprehensive sleep stage statistics"
+keywords = ["sleep", "analysis", "metrics", "medical", "research", "health", "sleep-stages", "sleep-analysis", "sleep-tracking", "polysomnography"]
 license = {text = "MIT"}
 classifiers = [
     "Development Status :: 4 - Beta",
