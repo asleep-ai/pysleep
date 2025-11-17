@@ -97,6 +97,104 @@ def compare_stats(result, expected, tolerance=0.003):
     assert len(result.sleep_cycle_time) == len(expected["sleep_cycle_time"])
 
 
+class TestRatioNormalization:
+    """Tests for ratio normalization to ensure ratios sum exactly to 1.0."""
+
+    def test_ratios_sum_to_one(self, calculator):
+        """Test that stage ratios sum exactly to 1.0 (no floating-point drift)."""
+        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
+        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=pytz.UTC)
+
+        # Various sleep patterns
+        test_cases = [
+            [WAKE] * 20 + [LIGHT] * 720 + [DEEP] * 180 + [REM] * 40,  # Normal pattern
+            [LIGHT] * 300 + [DEEP] * 100 + [REM] * 100,  # No wake during sleep
+            [WAKE] * 10 + [LIGHT] * 333 + [DEEP] * 167 + [REM] * 100,  # Fractional divisions
+        ]
+
+        for stages in test_cases:
+            result = calculator.calculate(stages, start, end)
+            ratio_sum = result.wake_ratio + result.light_ratio + result.deep_ratio + result.rem_ratio
+
+            # Exact equality check (no tolerance)
+            assert ratio_sum == 1.0, f"Ratios sum to {ratio_sum}, expected exactly 1.0"
+
+    def test_ratios_rounded_to_two_decimals(self, calculator):
+        """Test that all ratios are rounded to exactly 2 decimal places."""
+        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
+        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=pytz.UTC)
+
+        # Pattern that creates fractional ratios
+        stages = [WAKE] * 11 + [LIGHT] * 333 + [DEEP] * 222 + [REM] * 111
+        result = calculator.calculate(stages, start, end)
+
+        # Check each ratio has at most 2 decimal places
+        for ratio_name, ratio_value in [
+            ('wake_ratio', result.wake_ratio),
+            ('light_ratio', result.light_ratio),
+            ('deep_ratio', result.deep_ratio),
+            ('rem_ratio', result.rem_ratio),
+            ('sleep_ratio', result.sleep_ratio),
+            ('sleep_efficiency', result.sleep_efficiency),
+        ]:
+            # Convert to string and check decimal places
+            ratio_str = f"{ratio_value:.10f}"  # Format with many decimals
+            decimal_part = ratio_str.split('.')[1].rstrip('0')  # Remove trailing zeros
+            assert len(decimal_part) <= 2, f"{ratio_name} has more than 2 decimal places: {ratio_value}"
+
+    def test_sleep_ratio_calculation(self, calculator):
+        """Test that sleep_ratio = max(1 - wake_ratio, 0)."""
+        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
+        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=pytz.UTC)
+
+        # Various wake patterns
+        test_cases = [
+            ([WAKE] * 100 + [LIGHT] * 400, "Low wake"),
+            ([WAKE] * 250 + [LIGHT] * 250, "Half wake"),
+            ([WAKE] * 400 + [LIGHT] * 100, "High wake"),
+        ]
+
+        for stages, description in test_cases:
+            result = calculator.calculate(stages, start, end)
+            expected_sleep_ratio = max(1 - result.wake_ratio, 0)
+            expected_sleep_ratio = round(expected_sleep_ratio, 2)  # Round to 2 decimals
+
+            assert result.sleep_ratio == expected_sleep_ratio, \
+                f"{description}: sleep_ratio {result.sleep_ratio} != 1 - wake_ratio {expected_sleep_ratio}"
+            assert result.sleep_ratio >= 0, f"{description}: sleep_ratio is negative"
+
+    def test_floating_point_precision(self, calculator):
+        """Test that normalization handles floating-point precision errors."""
+        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
+        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=pytz.UTC)
+
+        # Patterns designed to create floating-point rounding issues
+        # Example: 333 light + 333 deep + 334 rem = 1000 epochs
+        # Raw ratios: 0.333, 0.333, 0.334
+        # After rounding to 2 decimals: 0.33 + 0.33 + 0.33 = 0.99 (needs +0.01 adjustment)
+        stages = [LIGHT] * 333 + [DEEP] * 333 + [REM] * 334
+        result = calculator.calculate(stages, start, end)
+
+        # Verify exact sum despite potential rounding errors
+        ratio_sum = result.wake_ratio + result.light_ratio + result.deep_ratio + result.rem_ratio
+        assert ratio_sum == 1.0, f"Failed to normalize fractional ratios: sum = {ratio_sum}"
+
+    def test_edge_case_all_wake(self, calculator):
+        """Test ratio normalization when session is all wake."""
+        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
+        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=pytz.UTC)
+
+        stages = [WAKE] * 960
+        result = calculator.calculate(stages, start, end)
+
+        # All ratios should be 0 (no sleep period)
+        assert result.wake_ratio == 0.0
+        assert result.light_ratio == 0.0
+        assert result.deep_ratio == 0.0
+        assert result.rem_ratio == 0.0
+        assert result.sleep_ratio == 0.0
+
+
 class TestBasicCalculation:
     """Basic calculation tests."""
 
@@ -366,6 +464,36 @@ class TestEdgeCases:
             # Non-negative latencies
             assert result.sleep_latency.total_seconds() >= 0, f"Failed for {description}: negative sleep_latency"
             assert result.wakeup_latency.total_seconds() >= 0, f"Failed for {description}: negative wakeup_latency"
+
+    def test_breathing_fields_none_when_unavailable(self, calculator):
+        """Verify breathing fields are None when breathing data unavailable."""
+        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
+        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=pytz.UTC)
+
+        # Simple sleep session
+        stages = [WAKE] * 20 + [LIGHT] * 400 + [DEEP] * 200 + [REM] * 100
+        result = calculator.calculate(stages, start, end)
+
+        # Verify all breathing durations are None
+        assert result.time_in_stable_breath is None
+        assert result.time_in_unstable_breath is None
+        assert result.time_in_snoring is None
+        assert result.time_in_no_snoring is None
+
+        # Verify all breathing ratios are None
+        assert result.stable_breath_ratio is None
+        assert result.unstable_breath_ratio is None
+        assert result.snoring_ratio is None
+        assert result.no_snoring_ratio is None
+
+        # Verify breathing metrics are None
+        assert result.breathing_pattern is None
+        assert result.breathing_index is None
+        assert result.unstable_breath_count is None
+        assert result.snoring_count is None
+
+        # Verify sleep_index also None
+        assert result.sleep_index is None
 
 
 def test_simple_hypnogram_without_datetime():
