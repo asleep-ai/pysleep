@@ -14,6 +14,8 @@ pip install pysleep
 - Various sleep metrics used in medical field
 - Sleep statistics calculation and analysis tools
 - Comprehensive sleep stage calculator for 30+ metrics from epoch data
+- Returns `None` for breathing fields (requires sensor data)
+- Returns `None` for sleep_index (scoring not implemented)
 
 ## Sleep Stage Calculator
 

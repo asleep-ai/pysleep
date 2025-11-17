@@ -26,6 +26,7 @@ from .types import (
     SleepStageRatio,
     SleepStageTime,
 )
+from .utils import round_second
 
 
 class SleepStageCalculator:
@@ -135,11 +136,11 @@ class SleepStageCalculator:
         result.time_in_deep = timedelta(seconds=durations.time_in_deep)
         result.time_in_rem = timedelta(seconds=durations.time_in_rem)
 
-        # Set breathing-related fields to default values
-        result.time_in_stable_breath = timedelta(0)
-        result.time_in_unstable_breath = timedelta(0)
-        result.time_in_snoring = timedelta(0)
-        result.time_in_no_snoring = timedelta(0)
+        # Set breathing-related fields to None (data not available)
+        result.time_in_stable_breath = None
+        result.time_in_unstable_breath = None
+        result.time_in_snoring = None
+        result.time_in_no_snoring = None
 
         # Set ratio fields
         result.sleep_efficiency = ratios.sleep_efficiency
@@ -149,15 +150,15 @@ class SleepStageCalculator:
         result.deep_ratio = ratios.deep_ratio
         result.rem_ratio = ratios.rem_ratio
 
-        # Set breathing ratios to defaults
-        result.stable_breath_ratio = 0.0
-        result.unstable_breath_ratio = 0.0
-        result.snoring_ratio = 0.0
-        result.no_snoring_ratio = 0.0
+        # Set breathing ratios to None
+        result.stable_breath_ratio = None
+        result.unstable_breath_ratio = None
+        result.snoring_ratio = None
+        result.no_snoring_ratio = None
 
-        # Set breathing pattern and index to defaults
-        result.breathing_pattern = ""
-        result.breathing_index = 0.0
+        # Set breathing pattern and index to None
+        result.breathing_pattern = None
+        result.breathing_index = None
 
         # Set WASO and cycle metrics
         result.waso_count = clusters.waso_count
@@ -166,9 +167,9 @@ class SleepStageCalculator:
         result.sleep_cycle = timedelta(seconds=clusters.sleep_cycle) if clusters.sleep_cycle is not None else None
         result.sleep_cycle_time = clusters.sleep_cycle_time
 
-        # Set breathing counts to defaults
-        result.unstable_breath_count = 0
-        result.snoring_count = 0
+        # Set breathing counts to None
+        result.unstable_breath_count = None
+        result.snoring_count = None
 
         # Sleep index not calculated by this calculator
         result.sleep_index = None
@@ -368,15 +369,31 @@ class SleepStageCalculator:
         # Avoid division by zero
         if durations.time_in_bed > 0:
             sleep_efficiency = durations.time_in_sleep / durations.time_in_bed
+            sleep_efficiency = round_second(sleep_efficiency)
         else:
             sleep_efficiency = 0.0
 
         if durations.time_in_sleep_period > 0:
-            sleep_ratio = durations.time_in_sleep / durations.time_in_sleep_period
+            # Calculate raw ratios
             wake_ratio = durations.time_in_wake / durations.time_in_sleep_period
             light_ratio = durations.time_in_light / durations.time_in_sleep_period
             deep_ratio = durations.time_in_deep / durations.time_in_sleep_period
             rem_ratio = durations.time_in_rem / durations.time_in_sleep_period
+
+            # Normalize stage ratios to sum exactly to 1.0
+            normalized = self._adjust_ratios_to_second(
+                wake=wake_ratio,
+                light=light_ratio,
+                deep=deep_ratio,
+                rem=rem_ratio
+            )
+
+            # Extract normalized values
+            wake_ratio = normalized['wake']
+            light_ratio = normalized['light']
+            deep_ratio = normalized['deep']
+            rem_ratio = normalized['rem']
+            sleep_ratio = normalized['sleep']
         else:
             sleep_ratio = 0.0
             wake_ratio = 0.0
@@ -392,6 +409,68 @@ class SleepStageCalculator:
             deep_ratio=deep_ratio,
             rem_ratio=rem_ratio,
         )
+
+    def _adjust_ratios_to_second(
+        self, wake: float, light: float, deep: float, rem: float
+    ) -> dict[str, float]:
+        """
+        Adjust stage ratios to sum exactly to 1.0 using iterative rounding.
+
+        This implements the same algorithm as the TypeScript reference and Python
+        backend, ensuring that floating-point precision errors don't cause ratios
+        to sum to values other than 1.0.
+
+        Args:
+            wake: Wake ratio (0.0-1.0)
+            light: Light sleep ratio (0.0-1.0)
+            deep: Deep sleep ratio (0.0-1.0)
+            rem: REM sleep ratio (0.0-1.0)
+
+        Returns:
+            Dictionary with adjusted ratios:
+            - wake: Adjusted wake ratio
+            - light: Adjusted light sleep ratio
+            - deep: Adjusted deep sleep ratio
+            - rem: Adjusted REM sleep ratio
+            - sleep: Sleep ratio (calculated as 1 - wake)
+        """
+        # Round all ratios to 2 decimal places
+        wake = round_second(wake)
+        light = round_second(light)
+        deep = round_second(deep)
+        rem = round_second(rem)
+
+        # Calculate sum and error
+        sum_of_ratios = wake + light + deep + rem
+        error = round_second(sum_of_ratios - 1)
+
+        # Iteratively adjust ratios until sum equals 1.0
+        # Priority: light → rem → deep → wake
+        while error != 0:
+            adjustment = 0.01 if error > 0 else -0.01
+
+            # Adjust first available ratio in priority order
+            if light:
+                light = round_second(light - adjustment)
+            elif rem:
+                rem = round_second(rem - adjustment)
+            elif deep:
+                deep = round_second(deep - adjustment)
+            elif wake:
+                wake = round_second(wake - adjustment)
+
+            error = round_second(error - adjustment)
+
+        # Calculate sleep ratio as 1 - wake (clamped to 0 minimum)
+        sleep = round_second(max(1 - wake, 0))
+
+        return {
+            'wake': wake,
+            'light': light,
+            'deep': deep,
+            'rem': rem,
+            'sleep': sleep,
+        }
 
     def _calculate_wake_cluster_indices(self, moments: SleepStageMoment, sleep_stages: List[int]) -> Tuple[int, int]:
         """

@@ -44,7 +44,10 @@ The calculator is fully integrated with pysleep's `SleepStat` model:
 - Returns `SleepStat` objects instead of internal types
 - All duration fields use `timedelta` for consistency
 - Sets `sleep_index` to None (sleep scoring not performed by this calculator)
-- Sets breathing-related fields to sensible defaults
+
+**Note**: Breathing-related fields are set to `None` to match Asleep API
+behavior when breathing data is unavailable. These fields require separate
+breathing sensor data not derivable from sleep stage hypnograms alone.
 
 ## Internal Architecture
 
