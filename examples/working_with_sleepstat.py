@@ -152,7 +152,7 @@ def main():
         [0] * 10           # 5 minutes awake before alarm
     )
 
-    # Analyze both nights (note: parameter order changed)
+    # Analyze both nights
     stats1 = analyze_single_night(calculator, night1_stages, night1_start, night1_end)
     stats2 = analyze_single_night(calculator, night2_stages, night2_start, night2_end)
 

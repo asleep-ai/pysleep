@@ -1,5 +1,6 @@
 """Tests for sleep stage calculator."""
 
+import os
 import pickle
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -11,8 +12,11 @@ from pysleep.calculator import SleepStageCalculator
 from pysleep.label import WAKE, LIGHT, DEEP, REM
 
 
-# Test data path (copied from data-backend for testing)
-TEST_DATA_PATH = Path(__file__).parent.parent.parent / "asleep-sleep-stage-lib/test_code/data/file/sleep_data.pkl"
+# Test data path configuration
+# Set PYSLEEP_TEST_DATA environment variable to use a custom test data path
+# Otherwise, falls back to external asleep-sleep-stage-lib repository location
+TEST_DATA_PATH = Path(os.getenv("PYSLEEP_TEST_DATA",
+    str(Path(__file__).parent.parent.parent / "asleep-sleep-stage-lib/test_code/data/file/sleep_data.pkl")))
 
 
 @pytest.fixture
@@ -415,6 +419,21 @@ class TestEdgeCases:
         assert result.sleep_time >= result.start_time
         assert result.wake_time >= result.sleep_time
         assert result.end_time >= result.wake_time
+
+        # Stage latencies should be None when no sleep occurred
+        assert result.rem_latency is None
+        assert result.light_latency is None
+        assert result.deep_latency is None
+
+        # All stage durations should be 0
+        assert result.time_in_light == timedelta(0)
+        assert result.time_in_deep == timedelta(0)
+        assert result.time_in_rem == timedelta(0)
+
+        # WASO and cycle metrics
+        assert result.waso_count == 0
+        assert result.sleep_cycle_count == 0
+        assert result.sleep_cycle is None
 
     def test_no_rem(self, calculator):
         """Test session with no REM sleep."""
