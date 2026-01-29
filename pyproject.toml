@@ -37,6 +37,10 @@ dev = ["pytest", "parameterized"]
 source = "file"
 path = "src/pysleep/__init__.py"
 
+[tool.ty.rules]
+unresolved-import = "ignore"
+possibly-missing-attribute = "ignore"
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"
