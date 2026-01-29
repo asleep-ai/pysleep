@@ -8,6 +8,7 @@ This example demonstrates:
 """
 
 from datetime import datetime
+
 from pysleep import SleepStageCalculator
 
 
@@ -17,7 +18,7 @@ def main():
 
     # Define session start and end times
     start_time = datetime(2024, 1, 1, 22, 0, 0)  # 10:00 PM
-    end_time = datetime(2024, 1, 2, 6, 30, 0)    # 6:30 AM next day
+    end_time = datetime(2024, 1, 2, 6, 30, 0)  # 6:30 AM next day
 
     # Simulate sleep stage data (30-second epochs)
     # In real usage, this would come from a sleep tracking device
@@ -25,27 +26,27 @@ def main():
 
     # Example pattern: initial wake, then cycles through sleep stages
     sleep_stages = (
-        [0] * 10 +         # 5 minutes awake at start
-        [1] * 20 +         # 10 minutes light sleep
-        [2] * 30 +         # 15 minutes deep sleep
-        [1] * 40 +         # 20 minutes light sleep
-        [3] * 20 +         # 10 minutes REM
-        [1] * 30 +         # 15 minutes light sleep
-        [0] * 4 +          # 2 minutes wake (WASO)
-        [1] * 40 +         # 20 minutes light sleep
-        [2] * 40 +         # 20 minutes deep sleep
-        [1] * 50 +         # 25 minutes light sleep
-        [3] * 40 +         # 20 minutes REM
-        [1] * 60 +         # 30 minutes light sleep
-        [2] * 20 +         # 10 minutes deep sleep
-        [1] * 80 +         # 40 minutes light sleep
-        [3] * 60 +         # 30 minutes REM
-        [1] * 40 +         # 20 minutes light sleep
-        [0] * 10 +         # 5 minutes wake
-        [1] * 40 +         # 20 minutes light sleep
-        [3] * 80 +         # 40 minutes REM
-        [1] * 40 +         # 20 minutes light sleep
-        [0] * 6            # 3 minutes wake at end
+        [0] * 10  # 5 minutes awake at start
+        + [1] * 20  # 10 minutes light sleep
+        + [2] * 30  # 15 minutes deep sleep
+        + [1] * 40  # 20 minutes light sleep
+        + [3] * 20  # 10 minutes REM
+        + [1] * 30  # 15 minutes light sleep
+        + [0] * 4  # 2 minutes wake (WASO)
+        + [1] * 40  # 20 minutes light sleep
+        + [2] * 40  # 20 minutes deep sleep
+        + [1] * 50  # 25 minutes light sleep
+        + [3] * 40  # 20 minutes REM
+        + [1] * 60  # 30 minutes light sleep
+        + [2] * 20  # 10 minutes deep sleep
+        + [1] * 80  # 40 minutes light sleep
+        + [3] * 60  # 30 minutes REM
+        + [1] * 40  # 20 minutes light sleep
+        + [0] * 10  # 5 minutes wake
+        + [1] * 40  # 20 minutes light sleep
+        + [3] * 80  # 40 minutes REM
+        + [1] * 40  # 20 minutes light sleep
+        + [0] * 6  # 3 minutes wake at end
     )
 
     # Calculate sleep statistics with the new API

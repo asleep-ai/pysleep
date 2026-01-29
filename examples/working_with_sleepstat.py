@@ -7,7 +7,8 @@ This example shows:
 3. How to create comparisons between multiple sleep sessions
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
+
 from pysleep import SleepStageCalculator
 
 
@@ -70,7 +71,7 @@ def print_detailed_stats(stats, night_label):
     # Working with datetime fields
     if stats.start_time and stats.end_time:
         duration = stats.end_time - stats.start_time
-        print(f"\nSession Info:")
+        print("\nSession Info:")
         print(f"  Start: {stats.start_time.strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"  End: {stats.end_time.strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"  Total duration: {format_duration(duration)}")
@@ -101,7 +102,7 @@ def compare_two_nights(stats1, stats2):
     direction = "more" if deep_diff > 0 else "less"
     print(f"  Night 1: {stats1.deep_ratio:.1%}")
     print(f"  Night 2: {stats2.deep_ratio:.1%}")
-    print(f"  {abs(deep_diff)*100:.1f}% {direction} deep sleep")
+    print(f"  {abs(deep_diff) * 100:.1f}% {direction} deep sleep")
 
 
 def main():
@@ -112,44 +113,44 @@ def main():
     night1_start = datetime(2024, 1, 1, 22, 30, 0)
     night1_end = datetime(2024, 1, 2, 6, 30, 0)
     night1_stages = (
-        [0] * 6 +          # 3 minutes to fall asleep
-        [1] * 40 +         # 20 minutes light
-        [2] * 60 +         # 30 minutes deep
-        [1] * 60 +         # 30 minutes light
-        [3] * 40 +         # 20 minutes REM
-        [1] * 80 +         # 40 minutes light
-        [2] * 40 +         # 20 minutes deep
-        [1] * 100 +        # 50 minutes light
-        [3] * 80 +         # 40 minutes REM
-        [1] * 120 +        # 60 minutes light
-        [3] * 100 +        # 50 minutes REM
-        [1] * 60 +         # 30 minutes light
-        [0] * 4            # 2 minutes awake before alarm
+        [0] * 6  # 3 minutes to fall asleep
+        + [1] * 40  # 20 minutes light
+        + [2] * 60  # 30 minutes deep
+        + [1] * 60  # 30 minutes light
+        + [3] * 40  # 20 minutes REM
+        + [1] * 80  # 40 minutes light
+        + [2] * 40  # 20 minutes deep
+        + [1] * 100  # 50 minutes light
+        + [3] * 80  # 40 minutes REM
+        + [1] * 120  # 60 minutes light
+        + [3] * 100  # 50 minutes REM
+        + [1] * 60  # 30 minutes light
+        + [0] * 4  # 2 minutes awake before alarm
     )
 
     # Night 2: Restless sleep with more wake periods
     night2_start = datetime(2024, 1, 2, 23, 0, 0)
     night2_end = datetime(2024, 1, 3, 6, 30, 0)
     night2_stages = (
-        [0] * 20 +         # 10 minutes to fall asleep
-        [1] * 30 +         # 15 minutes light
-        [0] * 10 +         # 5 minutes awake (restless)
-        [1] * 20 +         # 10 minutes light
-        [2] * 30 +         # 15 minutes deep
-        [1] * 40 +         # 20 minutes light
-        [0] * 8 +          # 4 minutes awake
-        [1] * 60 +         # 30 minutes light
-        [3] * 30 +         # 15 minutes REM
-        [0] * 6 +          # 3 minutes awake
-        [1] * 80 +         # 40 minutes light
-        [2] * 20 +         # 10 minutes deep
-        [1] * 100 +        # 50 minutes light
-        [3] * 40 +         # 20 minutes REM
-        [0] * 12 +         # 6 minutes awake
-        [1] * 80 +         # 40 minutes light
-        [3] * 60 +         # 30 minutes REM
-        [1] * 40 +         # 20 minutes light
-        [0] * 10           # 5 minutes awake before alarm
+        [0] * 20  # 10 minutes to fall asleep
+        + [1] * 30  # 15 minutes light
+        + [0] * 10  # 5 minutes awake (restless)
+        + [1] * 20  # 10 minutes light
+        + [2] * 30  # 15 minutes deep
+        + [1] * 40  # 20 minutes light
+        + [0] * 8  # 4 minutes awake
+        + [1] * 60  # 30 minutes light
+        + [3] * 30  # 15 minutes REM
+        + [0] * 6  # 3 minutes awake
+        + [1] * 80  # 40 minutes light
+        + [2] * 20  # 10 minutes deep
+        + [1] * 100  # 50 minutes light
+        + [3] * 40  # 20 minutes REM
+        + [0] * 12  # 6 minutes awake
+        + [1] * 80  # 40 minutes light
+        + [3] * 60  # 30 minutes REM
+        + [1] * 40  # 20 minutes light
+        + [0] * 10  # 5 minutes awake before alarm
     )
 
     # Analyze both nights

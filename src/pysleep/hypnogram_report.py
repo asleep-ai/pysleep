@@ -112,8 +112,6 @@ def format_duration(seconds: int) -> str:
     return " ".join(parts)
 
 
-
-
 def format_time_range(start_time: datetime, end_time: datetime) -> str:
     """Format a time range for display."""
     return f"{start_time.strftime('%I:%M %p')} - {end_time.strftime('%I:%M %p')}"
