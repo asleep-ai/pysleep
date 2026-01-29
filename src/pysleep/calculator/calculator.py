@@ -26,7 +26,6 @@ from .types import (
     SleepStageRatio,
     SleepStageTime,
 )
-from .utils import round_second
 
 
 class SleepStageCalculator:
@@ -369,7 +368,7 @@ class SleepStageCalculator:
         # Avoid division by zero
         if durations.time_in_bed > 0:
             sleep_efficiency = durations.time_in_sleep / durations.time_in_bed
-            sleep_efficiency = round_second(sleep_efficiency)
+            sleep_efficiency = round(sleep_efficiency, 2)
         else:
             sleep_efficiency = 0.0
 
@@ -382,18 +381,15 @@ class SleepStageCalculator:
 
             # Normalize stage ratios to sum exactly to 1.0
             normalized = self._adjust_ratios_to_second(
-                wake=wake_ratio,
-                light=light_ratio,
-                deep=deep_ratio,
-                rem=rem_ratio
+                wake=wake_ratio, light=light_ratio, deep=deep_ratio, rem=rem_ratio
             )
 
             # Extract normalized values
-            wake_ratio = normalized['wake']
-            light_ratio = normalized['light']
-            deep_ratio = normalized['deep']
-            rem_ratio = normalized['rem']
-            sleep_ratio = normalized['sleep']
+            wake_ratio = normalized["wake"]
+            light_ratio = normalized["light"]
+            deep_ratio = normalized["deep"]
+            rem_ratio = normalized["rem"]
+            sleep_ratio = normalized["sleep"]
         else:
             sleep_ratio = 0.0
             wake_ratio = 0.0
@@ -410,9 +406,7 @@ class SleepStageCalculator:
             rem_ratio=rem_ratio,
         )
 
-    def _adjust_ratios_to_second(
-        self, wake: float, light: float, deep: float, rem: float
-    ) -> dict[str, float]:
+    def _adjust_ratios_to_second(self, wake: float, light: float, deep: float, rem: float) -> dict[str, float]:
         """
         Adjust stage ratios to sum exactly to 1.0 using iterative rounding.
 
@@ -434,15 +428,20 @@ class SleepStageCalculator:
             - rem: Adjusted REM sleep ratio
             - sleep: Sleep ratio (calculated as 1 - wake)
         """
+
+        # Local rounding helper (inputs are guaranteed non-None here)
+        def r(v: float) -> float:
+            return round(v, 2)
+
         # Round all ratios to 2 decimal places
-        wake = round_second(wake)
-        light = round_second(light)
-        deep = round_second(deep)
-        rem = round_second(rem)
+        wake = r(wake)
+        light = r(light)
+        deep = r(deep)
+        rem = r(rem)
 
         # Calculate sum and error
         sum_of_ratios = wake + light + deep + rem
-        error = round_second(sum_of_ratios - 1)
+        error = r(sum_of_ratios - 1)
 
         # Iteratively adjust ratios until sum equals 1.0
         # Priority: light → rem → deep → wake
@@ -451,25 +450,25 @@ class SleepStageCalculator:
 
             # Adjust first available ratio in priority order
             if light:
-                light = round_second(light - adjustment)
+                light = r(light - adjustment)
             elif rem:
-                rem = round_second(rem - adjustment)
+                rem = r(rem - adjustment)
             elif deep:
-                deep = round_second(deep - adjustment)
+                deep = r(deep - adjustment)
             elif wake:
-                wake = round_second(wake - adjustment)
+                wake = r(wake - adjustment)
 
-            error = round_second(error - adjustment)
+            error = r(error - adjustment)
 
         # Calculate sleep ratio as 1 - wake (clamped to 0 minimum)
-        sleep = round_second(max(1 - wake, 0))
+        sleep = r(max(1 - wake, 0))
 
         return {
-            'wake': wake,
-            'light': light,
-            'deep': deep,
-            'rem': rem,
-            'sleep': sleep,
+            "wake": wake,
+            "light": light,
+            "deep": deep,
+            "rem": rem,
+            "sleep": sleep,
         }
 
     def _calculate_wake_cluster_indices(self, moments: SleepStageMoment, sleep_stages: List[int]) -> Tuple[int, int]:

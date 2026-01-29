@@ -2,21 +2,23 @@
 
 import os
 import pickle
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
-import pytz
 
 from pysleep.calculator import SleepStageCalculator
-from pysleep.label import WAKE, LIGHT, DEEP, REM
-
+from pysleep.label import DEEP, LIGHT, REM, WAKE
 
 # Test data path configuration
 # Set PYSLEEP_TEST_DATA environment variable to use a custom test data path
 # Otherwise, falls back to external asleep-sleep-stage-lib repository location
-TEST_DATA_PATH = Path(os.getenv("PYSLEEP_TEST_DATA",
-    str(Path(__file__).parent.parent.parent / "asleep-sleep-stage-lib/test_code/data/file/sleep_data.pkl")))
+TEST_DATA_PATH = Path(
+    os.getenv(
+        "PYSLEEP_TEST_DATA",
+        str(Path(__file__).parent.parent.parent / "asleep-sleep-stage-lib/test_code/data/file/sleep_data.pkl"),
+    )
+)
 
 
 @pytest.fixture
@@ -106,8 +108,8 @@ class TestRatioNormalization:
 
     def test_ratios_sum_to_one(self, calculator):
         """Test that stage ratios sum exactly to 1.0 (no floating-point drift)."""
-        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
-        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=pytz.UTC)
+        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=timezone.utc)
+        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=timezone.utc)
 
         # Various sleep patterns
         test_cases = [
@@ -125,8 +127,8 @@ class TestRatioNormalization:
 
     def test_ratios_rounded_to_two_decimals(self, calculator):
         """Test that all ratios are rounded to exactly 2 decimal places."""
-        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
-        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=pytz.UTC)
+        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=timezone.utc)
+        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=timezone.utc)
 
         # Pattern that creates fractional ratios
         stages = [WAKE] * 11 + [LIGHT] * 333 + [DEEP] * 222 + [REM] * 111
@@ -134,22 +136,22 @@ class TestRatioNormalization:
 
         # Check each ratio has at most 2 decimal places
         for ratio_name, ratio_value in [
-            ('wake_ratio', result.wake_ratio),
-            ('light_ratio', result.light_ratio),
-            ('deep_ratio', result.deep_ratio),
-            ('rem_ratio', result.rem_ratio),
-            ('sleep_ratio', result.sleep_ratio),
-            ('sleep_efficiency', result.sleep_efficiency),
+            ("wake_ratio", result.wake_ratio),
+            ("light_ratio", result.light_ratio),
+            ("deep_ratio", result.deep_ratio),
+            ("rem_ratio", result.rem_ratio),
+            ("sleep_ratio", result.sleep_ratio),
+            ("sleep_efficiency", result.sleep_efficiency),
         ]:
             # Convert to string and check decimal places
             ratio_str = f"{ratio_value:.10f}"  # Format with many decimals
-            decimal_part = ratio_str.split('.')[1].rstrip('0')  # Remove trailing zeros
+            decimal_part = ratio_str.split(".")[1].rstrip("0")  # Remove trailing zeros
             assert len(decimal_part) <= 2, f"{ratio_name} has more than 2 decimal places: {ratio_value}"
 
     def test_sleep_ratio_calculation(self, calculator):
         """Test that sleep_ratio = max(1 - wake_ratio, 0)."""
-        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
-        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=pytz.UTC)
+        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=timezone.utc)
+        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=timezone.utc)
 
         # Various wake patterns
         test_cases = [
@@ -163,14 +165,15 @@ class TestRatioNormalization:
             expected_sleep_ratio = max(1 - result.wake_ratio, 0)
             expected_sleep_ratio = round(expected_sleep_ratio, 2)  # Round to 2 decimals
 
-            assert result.sleep_ratio == expected_sleep_ratio, \
+            assert result.sleep_ratio == expected_sleep_ratio, (
                 f"{description}: sleep_ratio {result.sleep_ratio} != 1 - wake_ratio {expected_sleep_ratio}"
+            )
             assert result.sleep_ratio >= 0, f"{description}: sleep_ratio is negative"
 
     def test_floating_point_precision(self, calculator):
         """Test that normalization handles floating-point precision errors."""
-        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
-        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=pytz.UTC)
+        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=timezone.utc)
+        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=timezone.utc)
 
         # Patterns designed to create floating-point rounding issues
         # Example: 333 light + 333 deep + 334 rem = 1000 epochs
@@ -185,8 +188,8 @@ class TestRatioNormalization:
 
     def test_edge_case_all_wake(self, calculator):
         """Test ratio normalization when session is all wake."""
-        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
-        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=pytz.UTC)
+        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=timezone.utc)
+        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=timezone.utc)
 
         stages = [WAKE] * 960
         result = calculator.calculate(stages, start, end)
@@ -204,17 +207,17 @@ class TestBasicCalculation:
 
     def test_simple_case(self, calculator):
         """Test a simple sleep session."""
-        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
-        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=pytz.UTC)
+        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=timezone.utc)
+        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=timezone.utc)
 
         # 8 hours = 960 epochs
         # Pattern: 10min wake, 6h sleep (mostly light), 10min wake, 1.5h sleep, 10min wake
         stages = (
-            [WAKE] * 20 +  # 10 min wake
-            [LIGHT] * 720 +  # 6 hours light sleep
-            [WAKE] * 20 +  # 10 min wake
-            [LIGHT] * 180 +  # 1.5 hours light sleep
             [WAKE] * 20  # 10 min wake
+            + [LIGHT] * 720  # 6 hours light sleep
+            + [WAKE] * 20  # 10 min wake
+            + [LIGHT] * 180  # 1.5 hours light sleep
+            + [WAKE] * 20  # 10 min wake
         )
 
         result = calculator.calculate(stages, start, end)
@@ -258,7 +261,7 @@ class TestRealData:
         if sleep_data is None:
             pytest.skip("Test data not available")
 
-        utc = pytz.timezone("UTC")
+        utc = timezone.utc
         start_time = datetime(2023, 10, 20, 0, 0, 0, tzinfo=utc)
         end_time = datetime(2023, 10, 20, 7, 11, 45, tzinfo=utc)
 
@@ -302,7 +305,7 @@ class TestRealData:
         if sleep_data is None:
             pytest.skip("Test data not available")
 
-        utc = pytz.timezone("UTC")
+        utc = timezone.utc
         start_time = datetime(2023, 10, 20, 0, 0, 0, tzinfo=utc)
         end_time = datetime(2023, 10, 20, 7, 11, 45, tzinfo=utc)
 
@@ -349,7 +352,7 @@ class TestRealData:
         if sleep_data is None:
             pytest.skip("Test data not available")
 
-        utc = pytz.timezone("UTC")
+        utc = timezone.utc
         start_time = datetime(2023, 10, 20, 0, 0, 0, tzinfo=utc)
         end_time = datetime(2023, 10, 20, 7, 11, 45, tzinfo=utc)
 
@@ -399,8 +402,8 @@ class TestEdgeCases:
 
     def test_all_wake(self, calculator):
         """Test session with all wake stages."""
-        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
-        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=pytz.UTC)
+        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=timezone.utc)
+        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=timezone.utc)
         stages = [WAKE] * 960
 
         result = calculator.calculate(stages, start, end)
@@ -437,8 +440,8 @@ class TestEdgeCases:
 
     def test_no_rem(self, calculator):
         """Test session with no REM sleep."""
-        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
-        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=pytz.UTC)
+        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=timezone.utc)
+        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=timezone.utc)
         stages = [WAKE] * 20 + [LIGHT] * 920 + [WAKE] * 20
 
         result = calculator.calculate(stages, start, end)
@@ -450,8 +453,8 @@ class TestEdgeCases:
 
     def test_short_session(self, calculator):
         """Test a very short sleep session."""
-        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
-        end = datetime(2024, 1, 1, 23, 0, 0, tzinfo=pytz.UTC)
+        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=timezone.utc)
+        end = datetime(2024, 1, 1, 23, 0, 0, tzinfo=timezone.utc)
         stages = [WAKE] * 10 + [LIGHT] * 100 + [WAKE] * 10
 
         result = calculator.calculate(stages, start, end)
@@ -471,7 +474,7 @@ class TestEdgeCases:
         ]
 
         for stages, description in test_cases:
-            start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
+            start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=timezone.utc)
             end = start + timedelta(seconds=len(stages) * 30)
             result = calculator.calculate(stages, start, end)
 
@@ -486,8 +489,8 @@ class TestEdgeCases:
 
     def test_breathing_fields_none_when_unavailable(self, calculator):
         """Verify breathing fields are None when breathing data unavailable."""
-        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
-        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=pytz.UTC)
+        start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=timezone.utc)
+        end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=timezone.utc)
 
         # Simple sleep session
         stages = [WAKE] * 20 + [LIGHT] * 400 + [DEEP] * 200 + [REM] * 100
@@ -546,8 +549,8 @@ def test_timedelta_conversion_helper():
     a pysleep.SleepStat object with timedelta fields.
     """
     calculator = SleepStageCalculator()
-    start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=pytz.UTC)
-    end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=pytz.UTC)
+    start = datetime(2024, 1, 1, 22, 0, 0, tzinfo=timezone.utc)
+    end = datetime(2024, 1, 2, 6, 0, 0, tzinfo=timezone.utc)
     stages = [LIGHT] * 960  # Simple test case
 
     result = calculator.calculate(stages, start, end)
